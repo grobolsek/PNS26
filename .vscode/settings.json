@@ -1,0 +1,38 @@
+{
+  // Markdown settings
+  "[markdown]": {
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "off"
+    }
+  },
+
+  // LaTeX settings
+  "[latex]": {
+    "editor.wordWrap": "on"
+  },
+
+
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
+  "notebook.formatOnSave.enabled": true,
+
+
+  // Notebook settings
+  "jupyter.notebookFileRoot": "${workspaceFolder}",
+  "notebook.codeActionsOnSave": {
+    "notebook.source.fixAll": "explicit"
+  },
+
+  // Python environments
+  "python-envs.pythonProjects": [],
+  "python-envs.defaultEnvManager": "ms-python.python:system"
+}
