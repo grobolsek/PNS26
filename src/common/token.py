@@ -17,21 +17,30 @@ class Token:
         """The type of the token."""
 
         INT_CONST = auto()
+        STR_CONST = auto()
+
         IDENTIFIER = auto()
+
         ADD = auto()
         SUB = auto()
         MUL = auto()
         DIV = auto()
+
+        EQU = auto()
+        ASSIGN = auto()
+
         L_PRENTICES = auto()
         R_PRENTICES = auto()
-        EOF = auto()
+        L_C_PRENTICES = auto()
+        R_C_PRENTICES = auto()
+        SEMICOLON = auto()
 
         IF = auto()
         FOR = auto()
         WHILE = auto()
         RETURN = auto()
-        EQU = auto()
-        ASSIGN = auto()
+
+        EOF = auto()
 
     token: Symbol
     location: "Location"

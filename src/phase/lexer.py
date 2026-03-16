@@ -39,7 +39,10 @@ class Lexer:
         "*": Token.Symbol.MUL,
         "/": Token.Symbol.DIV,
         "(": Token.Symbol.L_PRENTICES,
+        "{": Token.Symbol.L_C_PRENTICES,
+        "}": Token.Symbol.R_C_PRENTICES,
         ")": Token.Symbol.R_PRENTICES,
+        ";": Token.Symbol.SEMICOLON,
         "==": Token.Symbol.EQU,
         "=": Token.Symbol.ASSIGN,
     }
@@ -92,7 +95,7 @@ class Lexer:
             self.column += 1
         return char
 
-    def next_token(self) -> Token:  # noqa: C901, PLR0911, PLR0912
+    def next_token(self) -> Token:  # noqa: C901, PLR0911, PLR0912, PLR0915
         """Scans the source and returns the next valid Token.
 
         Returns:
@@ -127,25 +130,26 @@ class Lexer:
                 if re.search(r"[xX]", char):
                     text += self._next_char()
 
-                    while re.search(r"[0-9a-fA-F]", self._peek()):
+                    while re.search(r"[a-zA-Z0-9]", self._peek()):
                         text += self._next_char()
 
+                    location = Location.range(start_loc, self._get_current_loc())
                     # 0x is not valid hex number
-                    if len(text) <= 2:  # noqa: PLR2004
-                        raise Report.CompilerSyntaxError(self.path, start_loc, text, "invalid hexadecimal int const")
+                    if len(text) <= 2 or re.search(r"[g-zG-Z]", text[2:]):  # noqa: PLR2004
+                        raise Report.CompilerSyntaxError(self.path, location, text, "invalid hexadecimal int const")
 
-                    end_loc = self._get_current_loc()
-                    return Token(Token.Symbol.INT_CONST, Location.range(start_loc, end_loc), text)
+                    return Token(Token.Symbol.INT_CONST, location, text)
 
                 while re.search(r"[0-9]", self._peek()):
                     text += self._next_char()
 
+                location = Location.range(start_loc, self._get_current_loc())
+
                 # 8 and 9 cant be in okta
                 if re.search(r"[89]", text):
-                    raise Report.CompilerSyntaxError(self.path, start_loc, text, "invalid okta int const")
+                    raise Report.CompilerSyntaxError(self.path, location, text, "invalid okta int const")
 
-                end_loc = self._get_current_loc()
-                return Token(Token.Symbol.INT_CONST, Location.range(start_loc, end_loc), text)
+                return Token(Token.Symbol.INT_CONST, location, text)
 
             # Allows one dot for decimals
             pattern = r"[0-9.]"
@@ -156,19 +160,29 @@ class Lexer:
                 if "." in text:
                     pattern = r"[0-9]"
 
-            end_loc = self._get_current_loc()
-            return Token(Token.Symbol.INT_CONST, Location.range(start_loc, end_loc), text)
+            location = Location.range(start_loc, self._get_current_loc())
+            return Token(Token.Symbol.INT_CONST, location, text)
 
         # Check for identifiers, than check if it it a keyword
-        if re.search(r"[a-zA-z_]", self._peek()):
+        if re.search(r"[a-zA-z_]", char):
             while re.search(r"[a-zA-z_0-9]", self._peek()):
                 text += self._next_char()
 
-            end_loc = self._get_current_loc()
+            location = Location.range(start_loc, self._get_current_loc())
 
             # Check for keywords
             symbol = self.KEYWORDS.get(text, Token.Symbol.IDENTIFIER)
-            return Token(symbol, Location.range(start_loc, end_loc), text)
+            return Token(symbol, location, text)
+
+        if char == '"':
+            text += self._next_char()
+            while (c := self._peek()) != '"':
+                if c == "":
+                    raise Report.CompilerSyntaxError(self.path, start_loc, text, "unterminated string literal")
+                text += self._next_char()
+            text += self._next_char()
+            location = Location.range(start_loc, self._get_current_loc())
+            return Token(Token.Symbol.STR_CONST, location, text)
 
         # Operators
         if char in [op[0] for op in self.OPERATORS]:
