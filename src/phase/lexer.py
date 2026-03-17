@@ -205,11 +205,8 @@ class Lexer:
         raise Report.CompilerSyntaxError(self.path, start_loc, char, "Unknown character")
 
 
-"""
 lexer = Lexer("test.txt")
 token = lexer.next_token()
 
 while token.token is not Token.Symbol.EOF:
-    print(token)
     token = lexer.next_token()
-"""
