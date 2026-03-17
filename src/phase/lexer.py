@@ -95,7 +95,7 @@ class Lexer:
             self.column += 1
         return char
 
-    def next_token(self) -> Token:  # noqa: C901, PLR0911, PLR0912, PLR0915
+    def next_token(self) -> Token:
         """Scans the source and returns the next valid Token.
 
         Returns:
@@ -121,44 +121,8 @@ class Lexer:
 
         # Digits
         if char.isdigit():
-            # Okta and hex
-            if char == "0":
+            while self._peek().isdigit():
                 text += self._next_char()
-                char = self._peek()
-
-                # Hex
-                if re.search(r"[xX]", char):
-                    text += self._next_char()
-
-                    while re.search(r"[a-zA-Z0-9]", self._peek()):
-                        text += self._next_char()
-
-                    location = Location.range(start_loc, self._get_current_loc())
-                    # 0x is not valid hex number
-                    if len(text) <= 2 or re.search(r"[g-zG-Z]", text[2:]):  # noqa: PLR2004
-                        raise Report.CompilerSyntaxError(self.path, location, text, "invalid hexadecimal int const")
-
-                    return Token(Token.Symbol.INT_CONST, location, text)
-
-                while re.search(r"[0-9]", self._peek()):
-                    text += self._next_char()
-
-                location = Location.range(start_loc, self._get_current_loc())
-
-                # 8 and 9 cant be in okta
-                if re.search(r"[89]", text):
-                    raise Report.CompilerSyntaxError(self.path, location, text, "invalid okta int const")
-
-                return Token(Token.Symbol.INT_CONST, location, text)
-
-            # Allows one dot for decimals
-            pattern = r"[0-9.]"
-            while re.search(pattern, self._peek()):
-                text += self._next_char()
-
-                # If dot is already present in text than do not count it anymore
-                if "." in text:
-                    pattern = r"[0-9]"
 
             location = Location.range(start_loc, self._get_current_loc())
             return Token(Token.Symbol.INT_CONST, location, text)
@@ -170,19 +134,7 @@ class Lexer:
 
             location = Location.range(start_loc, self._get_current_loc())
 
-            # Check for keywords
-            symbol = self.KEYWORDS.get(text, Token.Symbol.IDENTIFIER)
-            return Token(symbol, location, text)
-
-        if char == '"':
-            text += self._next_char()
-            while (c := self._peek()) != '"':
-                if c == "":
-                    raise Report.CompilerSyntaxError(self.path, start_loc, text, "unterminated string literal")
-                text += self._next_char()
-            text += self._next_char()
-            location = Location.range(start_loc, self._get_current_loc())
-            return Token(Token.Symbol.STR_CONST, location, text)
+            return Token(Token.Symbol.IDENTIFIER, location, text)
 
         # Operators
         if char in [op[0] for op in self.OPERATORS]:
@@ -205,11 +157,9 @@ class Lexer:
         raise Report.CompilerSyntaxError(self.path, start_loc, char, "Unknown character")
 
 
-"""
 lexer = Lexer("test.txt")
 token = lexer.next_token()
 
 while token.token is not Token.Symbol.EOF:
     print(token)
     token = lexer.next_token()
-"""

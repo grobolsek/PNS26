@@ -23,6 +23,6 @@ class Report:
                 text: The specific text snippet that caused the error.
                 message: A descriptive explanation of what went wrong.
             """
-            position = len(text) - 1 if (dif := location.end_column - location.beg_column) == 0 else dif - 1
+            position = 0 if (dif := location.end_column - location.beg_column) == 0 else dif - 1
             formatted_msg = f"File {file}, at: {location}\n\t{text.split('\n', maxsplit=1)[0]}\n\t{(position) * ' '}^\n{message}"
             super().__init__(formatted_msg)
