@@ -3,9 +3,11 @@
 Provides error reporting mechanisms for the compiler.
 """
 
+import linecache
 from pathlib import Path
 
-from common.token import Location
+# Fix: Import Token directly from the sibling module to avoid the circular loop
+from .token import Token
 
 
 class Report:
@@ -14,15 +16,17 @@ class Report:
     class CompilerSyntaxError(Exception):
         """Raised when the Lexer or Parser encounters invalid syntax."""
 
-        def __init__(self, file: Path | str, location: Location, text: str, message: str) -> None:
+        # Use Token.Location for the type hint
+        def __init__(self, file: Path, token: Token, message: str) -> None:
             """Initializes the syntax error with contextual file and position data.
 
             Args:
                 file: Path to the source file where the error occurred.
-                location: The Location object (point or range) of the error.
-                text: The specific text snippet that caused the error.
+                token: Token where error occurred.
                 message: A descriptive explanation of what went wrong.
             """
-            position = 0 if (dif := location.end_column - location.beg_column) == 0 else dif - 1
-            formatted_msg = f"File {file}, at: {location}\n\t{text.split('\n', maxsplit=1)[0]}\n\t{(position) * ' '}^\n{message}"
+            source_line = linecache.getline(str(file), token.location.beg_line).rstrip()
+
+            # Formatting the error message
+            formatted_msg = f"File {file}, at: {token.location}\n\t{source_line}\n\t{(token.location.beg_column - 1) * ' '}^\n{message}"
             super().__init__(formatted_msg)

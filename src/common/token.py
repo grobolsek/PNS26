@@ -26,52 +26,42 @@ class Token:
         MUL = auto()
         DIV = auto()
 
-        EQU = auto()
-        ASSIGN = auto()
-
         L_PRENTICES = auto()
         R_PRENTICES = auto()
-        L_C_PRENTICES = auto()
-        R_C_PRENTICES = auto()
-        SEMICOLON = auto()
-
-        IF = auto()
-        FOR = auto()
-        WHILE = auto()
-        RETURN = auto()
 
         EOF = auto()
 
-    token: Symbol
+        UNKNOWN = auto()
+
+    @dataclass(frozen=True)
+    class Location:
+        """Represents a range of positions within a source file."""
+
+        beg_line: int
+        beg_column: int
+        end_line: int
+        end_column: int
+
+        @classmethod
+        def point(cls, line: int, col: int) -> Self:
+            """Creates a location representing a single character position."""
+            return cls(line, col, line, col)
+
+        @classmethod
+        def range(cls, start: "Token.Location", end: "Token.Location") -> Self:
+            """Creates a location spanning from the start of one to the end of another."""
+            return cls(start.beg_line, start.beg_column, end.end_line, end.end_column)
+
+        def __str__(self) -> str:
+            """Returns representation of the line/column range."""
+            if self.beg_line == self.end_line and self.beg_column == self.end_column:
+                return f"{self.beg_line}:{self.beg_column}"
+            return f"{self.beg_line}:{self.beg_column}-{self.end_line}:{self.end_column}"
+
+    symbol: Symbol
     location: "Location"
-    actual: str
+    lexeme: str
 
     def __str__(self) -> str:
         """Returns a string representation of the token."""
-        return f'({self.token.name}, {self.location}, "{self.actual}")'
-
-
-@dataclass(frozen=True)
-class Location:
-    """Represents a range of positions within a source file."""
-
-    beg_line: int
-    beg_column: int
-    end_line: int
-    end_column: int
-
-    @classmethod
-    def point(cls, line: int, col: int) -> Self:
-        """Creates a location representing a single character position."""
-        return cls(line, col, line, col)
-
-    @classmethod
-    def range(cls, start: "Location", end: "Location") -> Self:
-        """Creates a location spanning from the start of one to the end of another."""
-        return cls(start.beg_line, start.beg_column, end.end_line, end.end_column)
-
-    def __str__(self) -> str:
-        """Returns representation of the line/column range."""
-        if self.beg_line == self.end_line and self.beg_column == self.end_column:
-            return f"{self.beg_line}:{self.beg_column}"
-        return f"{self.beg_line}:{self.beg_column}-{self.end_line}:{self.end_column}"
+        return f'({self.symbol.name}, {self.location}, "{self.lexeme}")'

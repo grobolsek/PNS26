@@ -4,12 +4,10 @@ Provides the Lexer class for performing lexical analysis on source files.
 This module breaks down raw source text into a stream of tokens.
 """
 
-import re
 from pathlib import Path
 from typing import ClassVar
 
-from common.report import Report
-from common.token import Location, Token
+from common import Location, Report, Symbol, Token
 
 
 class Lexer:
@@ -26,34 +24,24 @@ class Lexer:
         column (int): The current column number (1-indexed).
     """
 
-    KEYWORDS: ClassVar[dict[str, Token.Symbol]] = {
-        "if": Token.Symbol.IF,
-        "for": Token.Symbol.FOR,
-        "while": Token.Symbol.WHILE,
-        "return": Token.Symbol.RETURN,
+    KEYWORDS: ClassVar[dict[str, Symbol]] = {}
+
+    OPERATORS: ClassVar[dict[str, Symbol]] = {
+        "+": Symbol.ADD,
+        "-": Symbol.SUB,
+        "*": Symbol.MUL,
+        "/": Symbol.DIV,
+        "(": Symbol.L_PRENTICES,
+        ")": Symbol.R_PRENTICES,
     }
 
-    OPERATORS: ClassVar[dict[str, Token.Symbol]] = {
-        "+": Token.Symbol.ADD,
-        "-": Token.Symbol.SUB,
-        "*": Token.Symbol.MUL,
-        "/": Token.Symbol.DIV,
-        "(": Token.Symbol.L_PRENTICES,
-        "{": Token.Symbol.L_C_PRENTICES,
-        "}": Token.Symbol.R_C_PRENTICES,
-        ")": Token.Symbol.R_PRENTICES,
-        ";": Token.Symbol.SEMICOLON,
-        "==": Token.Symbol.EQU,
-        "=": Token.Symbol.ASSIGN,
-    }
-
-    def __init__(self, path: str | Path) -> None:
+    def __init__(self, file: str | Path) -> None:
         """Initializes the Lexer with a file path and reads its content.
 
         Args:
-            path: String or Path object pointing to the source file.
+            file: String or Path object pointing to the source file.
         """
-        self.path = Path(path)
+        self.path = Path(file)
         self.source = self.path.read_text()
         self.offset = 0
 
@@ -112,54 +100,36 @@ class Lexer:
         start_loc = self._get_current_loc()
 
         char = self._peek()
-        text: str = ""
+        buffer: str = ""
 
         # EOF
         if char == "":
             self.eof = True
-            return Token(Token.Symbol.EOF, start_loc, "")
+            return Token(Symbol.EOF, start_loc, "")
 
         # Digits
         if char.isdigit():
             while self._peek().isdigit():
-                text += self._next_char()
+                buffer += self._next_char()
 
             location = Location.range(start_loc, self._get_current_loc())
-            return Token(Token.Symbol.INT_CONST, location, text)
+            return Token(Symbol.INT_CONST, location, buffer)
 
-        # Check for identifiers, than check if it it a keyword
-        if re.search(r"[a-zA-z_]", char):
-            while re.search(r"[a-zA-z_0-9]", self._peek()):
-                text += self._next_char()
+        # Check for identifiers
+        if char.isalpha() or char == "_":
+            while self._peek().isalnum() or self._peek() == "_":
+                buffer += self._next_char()
 
             location = Location.range(start_loc, self._get_current_loc())
-
-            return Token(Token.Symbol.IDENTIFIER, location, text)
+            return Token(Symbol.IDENTIFIER, location, buffer)
 
         # Operators
         if char in [op[0] for op in self.OPERATORS]:
             # Consume the first character
-            text = self._next_char()
-
-            # Peek at the next character to see if a 2-char operator exists
-            potential_2char = text + self._peek()
-
-            # Check if the 2-char is valid
-            if potential_2char in self.OPERATORS:
-                text = potential_2char
-                self._next_char()
-                return Token(self.OPERATORS[text], start_loc, text)
+            buffer = self._next_char()
 
             # Check if the single char is valid
-            if text in self.OPERATORS:
-                return Token(self.OPERATORS[text], start_loc, text)
+            if buffer in self.OPERATORS:
+                return Token(self.OPERATORS[buffer], start_loc, buffer)
 
-        raise Report.CompilerSyntaxError(self.path, start_loc, char, "Unknown character")
-
-
-lexer = Lexer("test.txt")
-token = lexer.next_token()
-
-while token.token is not Token.Symbol.EOF:
-    print(token)
-    token = lexer.next_token()
+        raise Report.CompilerSyntaxError(self.path, Token(Symbol.UNKNOWN, start_loc, buffer), "Unknown character")
