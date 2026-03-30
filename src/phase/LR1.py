@@ -7,7 +7,7 @@ from pathlib import Path
 
 from common import NonTerminal as NT  # noqa: N817
 from common import Report, Symbol, Token
-from common.table import Table
+from common.lr1_table import Table
 from phase.lexer import Lexer
 
 
