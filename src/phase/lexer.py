@@ -31,8 +31,8 @@ class Lexer:
         "-": Symbol.SUB,
         "*": Symbol.MUL,
         "/": Symbol.DIV,
-        "(": Symbol.L_PRENTICES,
-        ")": Symbol.R_PRENTICES,
+        "(": Symbol.L_PAREN,
+        ")": Symbol.R_PAREN,
     }
 
     def __init__(self, file: str | Path) -> None:

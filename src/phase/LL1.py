@@ -1,12 +1,12 @@
-from pathlib import Path  # noqa: D100
-
-from common import Report, Symbol, Token
-from phase.lexer import Lexer
-
 """syntax.
 
 Provides a recursive LL(1) parser and generating syntax error reports.
-"""
+"""  # noqa: N999
+
+from pathlib import Path
+
+from common import Report, Symbol, Token
+from phase.lexer import Lexer
 
 
 class Syntax:
@@ -41,7 +41,7 @@ class Syntax:
 
     def _parse_e(self) -> None:
         match self._peek():
-            case Symbol.INT_CONST | Symbol.IDENTIFIER | Symbol.L_PRENTICES:
+            case Symbol.INT_CONST | Symbol.IDENTIFIER | Symbol.L_PAREN:
                 self._parse_t()
                 self._parse_e2()
             case _:
@@ -58,7 +58,7 @@ class Syntax:
 
     def _parse_t(self) -> None:
         match self._peek():
-            case Symbol.INT_CONST | Symbol.IDENTIFIER | Symbol.L_PRENTICES:
+            case Symbol.INT_CONST | Symbol.IDENTIFIER | Symbol.L_PAREN:
                 self._parse_f()
                 self._parse_t2()
             case _:
@@ -77,10 +77,10 @@ class Syntax:
         match self._peek():
             case Symbol.INT_CONST | Symbol.IDENTIFIER:
                 self._take(self._peek())
-            case Symbol.L_PRENTICES:
-                self._take(Symbol.L_PRENTICES)
+            case Symbol.L_PAREN:
+                self._take(Symbol.L_PAREN)
                 self._parse_e()
-                self._take(Symbol.R_PRENTICES)
+                self._take(Symbol.R_PAREN)
             case _:
                 raise self._error()
 
@@ -95,3 +95,6 @@ class Syntax:
 
     def _error(self) -> Report.CompilerSyntaxError:
         return Report.CompilerSyntaxError(self.file, self.current_token, "Invalid operation")
+
+
+Syntax("a.txt").parse()

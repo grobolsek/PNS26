@@ -1,8 +1,7 @@
 from .report import Report
-from .token import Token
+from .token import NonTerminal, Symbol, Token
 
-Symbol = Token.Symbol
 Location = Token.Location
 
 
-__all__ = ["Location", "Report", "Symbol", "Token"]
+__all__ = ["Location", "NonTerminal", "Report", "Symbol", "Token"]
