@@ -7,7 +7,7 @@ This module breaks down raw source text into a stream of tokens.
 from pathlib import Path
 from typing import ClassVar
 
-from common import Location, Report, Symbol, Token
+from common import Location, Report, Terminal, Token
 
 
 class Lexer:
@@ -24,15 +24,15 @@ class Lexer:
         column (int): The current column number (1-indexed).
     """
 
-    KEYWORDS: ClassVar[dict[str, Symbol]] = {}
+    KEYWORDS: ClassVar[dict[str, Terminal]] = {}
 
-    OPERATORS: ClassVar[dict[str, Symbol]] = {
-        "+": Symbol.ADD,
-        "-": Symbol.SUB,
-        "*": Symbol.MUL,
-        "/": Symbol.DIV,
-        "(": Symbol.L_PAREN,
-        ")": Symbol.R_PAREN,
+    OPERATORS: ClassVar[dict[str, Terminal]] = {
+        "+": Terminal.ADD,
+        "-": Terminal.SUB,
+        "*": Terminal.MUL,
+        "/": Terminal.DIV,
+        "(": Terminal.L_PAREN,
+        ")": Terminal.R_PAREN,
     }
 
     def __init__(self, file: str | Path) -> None:
@@ -105,7 +105,7 @@ class Lexer:
         # EOF
         if char == "":
             self.eof = True
-            return Token(Symbol.EOF, start_loc, "")
+            return Token(Terminal.EOF, start_loc, "")
 
         # Digits
         if char.isdigit():
@@ -113,7 +113,7 @@ class Lexer:
                 buffer += self._next_char()
 
             location = Location.range(start_loc, self._get_current_loc())
-            return Token(Symbol.INT_CONST, location, buffer)
+            return Token(Terminal.INT_CONST, location, buffer)
 
         # Check for identifiers
         if char.isalpha() or char == "_":
@@ -121,7 +121,7 @@ class Lexer:
                 buffer += self._next_char()
 
             location = Location.range(start_loc, self._get_current_loc())
-            return Token(Symbol.IDENTIFIER, location, buffer)
+            return Token(Terminal.IDENTIFIER, location, buffer)
 
         # Operators
         if char in [op[0] for op in self.OPERATORS]:
@@ -132,4 +132,4 @@ class Lexer:
             if buffer in self.OPERATORS:
                 return Token(self.OPERATORS[buffer], start_loc, buffer)
 
-        raise Report.CompilerSyntaxError(self.path, Token(Symbol.UNKNOWN, start_loc, buffer), "Unknown character")
+        raise Report.CompilerSyntaxError(self.path, Token(Terminal.UNKNOWN, start_loc, buffer), "Unknown character")

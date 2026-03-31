@@ -5,7 +5,7 @@ Provides a recursive LL(1) parser and generating syntax error reports.
 
 from pathlib import Path
 
-from common import Report, Symbol, Token
+from common import Report, Terminal, Token
 from phase.lexer import Lexer
 
 
@@ -36,12 +36,12 @@ class Syntax:
         self._parse_e()
 
         # Check for trailing tokens after the expression finishes
-        if self._peek() != Symbol.EOF:
+        if self._peek() != Terminal.EOF:
             raise self._error()
 
     def _parse_e(self) -> None:
         match self._peek():
-            case Symbol.INT_CONST | Symbol.IDENTIFIER | Symbol.L_PAREN:
+            case Terminal.INT_CONST | Terminal.IDENTIFIER | Terminal.L_PAREN:
                 self._parse_t()
                 self._parse_e2()
             case _:
@@ -49,7 +49,7 @@ class Syntax:
 
     def _parse_e2(self) -> None:
         match self._peek():
-            case Symbol.ADD | Symbol.SUB:
+            case Terminal.ADD | Terminal.SUB:
                 self._take(self._peek())
                 self._parse_t()
                 self._parse_e2()
@@ -58,7 +58,7 @@ class Syntax:
 
     def _parse_t(self) -> None:
         match self._peek():
-            case Symbol.INT_CONST | Symbol.IDENTIFIER | Symbol.L_PAREN:
+            case Terminal.INT_CONST | Terminal.IDENTIFIER | Terminal.L_PAREN:
                 self._parse_f()
                 self._parse_t2()
             case _:
@@ -66,7 +66,7 @@ class Syntax:
 
     def _parse_t2(self) -> None:
         match self._peek():
-            case Symbol.MUL | Symbol.DIV:
+            case Terminal.MUL | Terminal.DIV:
                 self._take(self._peek())
                 self._parse_f()
                 self._parse_t2()
@@ -75,19 +75,19 @@ class Syntax:
 
     def _parse_f(self) -> None:
         match self._peek():
-            case Symbol.INT_CONST | Symbol.IDENTIFIER:
+            case Terminal.INT_CONST | Terminal.IDENTIFIER:
                 self._take(self._peek())
-            case Symbol.L_PAREN:
-                self._take(Symbol.L_PAREN)
+            case Terminal.L_PAREN:
+                self._take(Terminal.L_PAREN)
                 self._parse_e()
-                self._take(Symbol.R_PAREN)
+                self._take(Terminal.R_PAREN)
             case _:
                 raise self._error()
 
-    def _peek(self) -> Symbol:
+    def _peek(self) -> Terminal:
         return self.current_token.symbol
 
-    def _take(self, symbol: Symbol) -> None:
+    def _take(self, symbol: Terminal) -> None:
         if self._peek() == symbol:
             self.current_token = self.lexer.next_token()
             return

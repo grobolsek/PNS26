@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Self
 
 
-class Symbol(Enum):
+class Terminal(Enum):
     """The type of the token."""
 
     INT_CONST = "int"
@@ -68,7 +68,7 @@ class Token:
                 return f"{self.beg_line}:{self.beg_column}"
             return f"{self.beg_line}:{self.beg_column}-{self.end_line}:{self.end_column}"
 
-    symbol: Symbol
+    symbol: Terminal
     location: "Location"
     lexeme: str
 

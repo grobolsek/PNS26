@@ -6,7 +6,7 @@ Provides a RL(1) parser and generating syntax error reports.
 from pathlib import Path
 
 from common import NonTerminal as NT  # noqa: N817
-from common import Report, Symbol, Token
+from common import Report, Terminal, Token
 from common.lr1_table import Table
 from phase.lexer import Lexer
 
@@ -29,6 +29,7 @@ class Syntax:
         self.current_token: Token = self.lexer.next_token()
         self.stack: list[int] = [0]
         self.table = Table(self._shift, self._reduce, self._accept)
+        self.steps: list[str] = ["S -> E"]
 
     def parse(self) -> None:
         """Starts the parsing process from the entry point (Expression).
@@ -40,7 +41,7 @@ class Syntax:
         try:
             while True:
                 state = self.stack[-1]
-                symbol = self._peek()
+                symbol = self.current_token.symbol
                 action = self.table.action.get((state, symbol))
                 if action is None:
                     raise self._error() from None
@@ -54,8 +55,8 @@ class Syntax:
         self.stack.append(state)
         self.current_token = self.lexer.next_token()
 
-    def _reduce(self, lhs: NT, rhs: list[NT | Symbol]) -> None:
-        print(f"{lhs} -> {' '.join(str(s) for s in rhs)}")  # noqa: T201
+    def _reduce(self, lhs: NT, rhs: list[NT | Terminal]) -> None:
+        self.steps.append(f"{lhs} -> {' '.join(str(s) for s in rhs)}")
 
         for _ in range(len(rhs)):
             self.stack.pop()
@@ -67,16 +68,17 @@ class Syntax:
 
         self.stack.append(next_state)
 
-    def _peek(self) -> Symbol:
-        return self.current_token.symbol
-
     def _accept(self) -> None:
         raise StopIteration
 
     def _error(self) -> Report.CompilerSyntaxError:
         return Report.CompilerSyntaxError(self.file, self.current_token, "Invalid operation")
 
+    def __str__(self) -> str:
+        """Returns string of steps syntax-er took to complete LR(1)."""
+        return "\n".join(self.steps[::-1])
+
 
 syntax = Syntax("a.txt")
-
 syntax.parse()
+print(syntax)  # noqa: T201
