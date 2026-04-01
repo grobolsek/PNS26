@@ -79,6 +79,6 @@ class Syntax:
         return "\n".join(self.steps[::-1])
 
 
-syntax = Syntax("b.txt")
+syntax = Syntax("a.txt")
 syntax.parse()
 print(syntax)  # noqa: T201
