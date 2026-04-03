@@ -29,7 +29,6 @@ class Syntax:
         self.current_token: Token = self.lexer.next_token()
         self.stack: list[int] = [0]
         self.table = Table(self._shift, self._reduce, self._accept)
-        self.steps: list[str] = ["S -> E"]
 
     def parse(self) -> None:
         """Starts the parsing process from the entry point (Expression).
@@ -56,7 +55,7 @@ class Syntax:
         self.current_token = self.lexer.next_token()
 
     def _reduce(self, lhs: NT, rhs: list[NT | Terminal]) -> None:
-        self.steps.append(f"{lhs} -> {' '.join(str(s) for s in rhs)}")
+        print(f"{lhs} -> {' '.join(str(s) for s in rhs)}")  # noqa: T201
 
         for _ in range(len(rhs)):
             self.stack.pop()
@@ -74,11 +73,6 @@ class Syntax:
     def _error(self) -> Report.CompilerSyntaxError:
         return Report.CompilerSyntaxError(self.file, self.current_token, "Invalid operation")
 
-    def __str__(self) -> str:
-        """Returns string of steps syntax-er took to complete LR(1)."""
-        return "\n".join(self.steps[::-1])
-
 
 syntax = Syntax("a.txt")
 syntax.parse()
-print(syntax)  # noqa: T201
